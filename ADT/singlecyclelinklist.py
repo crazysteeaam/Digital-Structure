@@ -94,47 +94,44 @@ class SingleLinkList(object):
         if self.search(item):
             cur = self.__head
             pre = None
-            while cur != None:
+            while cur.next != self.__head:
                 if cur.item == item:
                     # 先判断此结点是非是头节点
-                    # 头节点
                     if cur == self.__head:
-                        self.head = cur.next
+                        # 头节点
+                        # 找尾结点
+                        rear=self.__head
+                        while rear.next != self.__head:
+                            rear=rear.next
+                        rear.next=cur.next
+                        self.__head = cur.next
+
+
                     else:
+                        #中间结点
                         pre.next = cur.next
                     break
                 else:
                     pre = cur
                     cur = cur.next
-        else:
-            print("元素不在列表中")
+            #尾结点
+            if cur.item==item:
 
-    def removepos(self,pos):
-        if pos>=1 and pos <= li.length()-1:
-            cur=self.__head
-            pre=None
-            count=0
-            while count < pos-1:
-                pre=pre.next
-                count +=1
-            cur=pre.next
-            cur=cur.next
-            pre.next=cur
-        elif pos==0:
-            cur=self.__head
-            self.__head=cur.next
         else:
-            print("元素不在列表中")        
-
+            print("元素不在列表中")     
 
     def search(self, item):
         """查找节点是否存在"""
+        if self.is_empty():
+            return False
         cur = self.__head
-        while cur != None:
+        while cur.next != self.__head:
             if cur.item == item:
                 return True
             else:
                 cur = cur.next
+        if cur.item == item:
+            return True
         return False
 
     def removerpos(self,rpos):
