@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import pymysql
 import matplotlib.pyplot
+from sqlalchemy import types
+from sqlalchemy.types import VARCHAR
 
 
 # 队列ADT
@@ -58,6 +60,26 @@ class ArrayQueue:
         print()
 
 
+class alluse():
+    def averagewaittime():
+        # 计算所有病人平均等待时间
+        db = pymysql.connect(host="localhost", user="root",
+                             password="Qqhh12345", database="ymyhospital", charset="utf8")
+        cursor = db.cursor()
+        sql = """SELECT AVG(waittime.exittime - waittime.entertime) AS waittimelength FROM waittime"""
+        try:
+            # 执行sql语句
+            cursor.execute(sql)
+            # 提交到数据库执行
+            db.commit()  # 事务代码
+        except Exception as e:
+            print("添加失败", e)
+            db.rollback()  # 发生错误 回滚事务
+        results = cursor.fetchone()
+        db.close()  # 最后关闭连接
+        return results
+
+
 class normal():
     # 门诊函数库
     def normal_number(normal_loc, normal_scale):
@@ -86,19 +108,48 @@ class normal():
 
     def normal_get_patientNO(self, current_time):
         # 用户挂号成功，成功进入排队队列
-        global normal_patientnumber
+        global normal_patientnumber, patientinf
         normal_i = 0
         while normal_i < normal_queuenumber[current_time]:
             normal_patientnumber = normal_patientnumber+1
             normal_i = normal_i+1
-            ArrayQueue.enqueue(normal_queue, "N"+str(normal_patientnumber))
+            ArrayQueue.enqueue(normal_queue, normal_patientnumber)
+            db = pymysql.connect(host="localhost", user="root",
+                                 password="Qqhh12345", database="ymyhospital", charset="utf8")
+            cursor = db.cursor()
+            sql = """insert into waittime(patientinfo,entertime) values(%d,%d)""" % (
+                normal_patientnumber, current_time)
+            try:
+                # 执行sql语句
+                cursor.execute(sql)
+                # 提交到数据库执行
+                db.commit()  # 事务代码
+            except Exception as e:
+                print("添加失败", e)
+                db.rollback()  # 发生错误 回滚事务
+            db.close()  # 最后关闭连接
 
     def normal_dequeue(self):
         # 模拟门诊排队队列出队过程
         global normal_group
         if normal_group <= ArrayQueue.__len__(self):
             for normalgroupnumber in range(normal_group):
+                patientinf = ArrayQueue.first(self)
                 ArrayQueue.dequeue(self)
+                db = pymysql.connect(
+                    host="localhost", user="root", password="Qqhh12345", database="ymyhospital", charset="utf8")
+                cursor = db.cursor()
+                sql = """update waittime set exittime=%d where patientinfo=%d""" % (
+                    current_time, patientinf)
+                try:
+                    # 执行sql语句
+                    cursor.execute(sql)
+                    # 提交到数据库执行
+                    db.commit()  # 事务代码
+                except Exception as e:
+                    print("添加失败", e)
+                    db.rollback()  # 发生错误 回滚事务
+                db.close()  # 最后关闭连接
         else:
             while ArrayQueue.__len__(self):
                 ArrayQueue.dequeue(self)
@@ -115,7 +166,7 @@ class main():
     conn = pymysql.connect(**db_info)
     cursor = conn.cursor()
 
-    global sum_time, normal_loc, normal_scale, normal_sumlist, current_time, normal_patientnumber, normal_group  # 定义全局变量
+    global sum_time, normal_loc, normal_scale, normal_sumlist, current_time, normal_patientnumber, normal_group, average_waittime  # 定义全局变量
     global normal_queuenumber, normal_queue  # 定义全局顺序表、队列
 
     # 输入
@@ -129,7 +180,7 @@ class main():
     print("门诊要服务的总用户人数为%d" % (normal_sumlist))
     normal_queue = ArrayQueue()
     current_time = 0
-    normal_patientnumber = 0
+    normal_patientnumber = 10000
 
     while current_time < sum_time:
         normal.normal_get_patientNO(normal_queue, current_time)
@@ -139,4 +190,6 @@ class main():
     print()
     print("经过%d分钟，门诊病人完成诊疗人数为%d人" %
           (sum_time, int(normal_sumlist)-int(ArrayQueue.__len__(normal_queue))))
-    print("门诊病人剩下人数为%d" % (ArrayQueue.__len__(normal_queue)))
+    print("门诊病人剩下人数为%d人" % (ArrayQueue.__len__(normal_queue)))
+    average_waittime = alluse.averagewaittime()
+    print("所有病人的平均等待时间为%f分钟" % (average_waittime))
