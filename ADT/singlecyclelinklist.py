@@ -1,10 +1,12 @@
 class SingleNode(object):
     """"结点""""
-    def __init__(self,item):
-        #_item存放数据元素
-        self.item=item
-        #next是下个节点的标识
-        self.next=None
+
+    def __init__(self, item):
+        # _item存放数据元素
+        self.item = item
+        # next是下个节点的标识
+        self.next = None
+
 
 class SingleLinkList(object):
     """单向循环链表"""
@@ -12,7 +14,7 @@ class SingleLinkList(object):
     def __init__(self, node=None):
         self.__head = node
         if node:
-            node.next=node
+            node.next = node
 
     def is_empty(self):
         """链表是否为空"""
@@ -47,13 +49,13 @@ class SingleLinkList(object):
         """链表头部增加元素，头插法"""
         node = SingleNode(item)
         if self.is_empty():
-            self.__head=node
-            node.next=node
+            self.__head = node
+            node.next = node
         else:
-            cur=self.__head
+            cur = self.__head
             while cur.next != self.__head:
-                cur=cur.next
-            cur.next=node
+                cur = cur.next
+            cur.next = node
             node.next = self.__head
             self.__head = node
 
@@ -67,7 +69,7 @@ class SingleLinkList(object):
             while cur.next != self.__head:
                 cur = cur.next
             cur.next = node
-            node.next=self.__head
+            node.next = self.__head
 
     def insert(self, pos, item):
         """
@@ -91,6 +93,8 @@ class SingleLinkList(object):
 
     def remove(self, item):
         """删除节点"""
+        if self.is_empty():
+            return
         if self.search(item):
             cur = self.__head
             pre = None
@@ -100,25 +104,26 @@ class SingleLinkList(object):
                     if cur == self.__head:
                         # 头节点
                         # 找尾结点
-                        rear=self.__head
+                        rear = self.__head
                         while rear.next != self.__head:
-                            rear=rear.next
-                        rear.next=cur.next
+                            rear = rear.next
                         self.__head = cur.next
-
-
+                        rear.next = self.__head
                     else:
-                        #中间结点
+                        # 中间结点
                         pre.next = cur.next
                     break
                 else:
                     pre = cur
                     cur = cur.next
-            #尾结点
-            if cur.item==item:
-
+            # 尾结点
+            if cur.item == item:
+                if cur == self.__head:
+                    self.__head = None
+                else:
+                    pre.next = cur.next
         else:
-            print("元素不在列表中")     
+            print("元素不在列表中")
 
     def search(self, item):
         """查找节点是否存在"""
@@ -134,7 +139,7 @@ class SingleLinkList(object):
             return True
         return False
 
-    def removerpos(self,rpos):
+    def removerpos(self, rpos):
         """删除倒数第n个结点"""
-        pos=self.length()-rpos
+        pos = self.length()-rpos
         self.removepos(pos)
