@@ -2,8 +2,8 @@ import math
 import numpy as np
 
 
-# 队列ADT
 class ArrayQueue:
+    # 队列ADT
     DEFAULT_CAPACITY = 2
 
     def __init__(self):
@@ -50,7 +50,7 @@ class ArrayQueue:
     def printqueue(self):
         for i in range(self._size):
             pos = (self._front + self._size - 1 - i) % len(self._data)
-            #print(str(i), ": ", str(pos))
+            # print(str(i), ": ", str(pos))
             print(self._data[pos], end=" ")
         print()
 
@@ -73,6 +73,7 @@ class normal():
     def sum_normalpatient(sum_time):
         # 计算门诊要服务的总用户人数
         for numsum in range(sum_time):
+            # 将每分钟门诊到达人数存入队列
             normal_perminnumber = normal.normal_number(
                 normal_loc, normal_scale)
             normal_queuenumber.append(normal_perminnumber)
@@ -100,9 +101,13 @@ class normal():
             while ArrayQueue.__len__(self):
                 ArrayQueue.dequeue(self)
 
+    def normal_waittime(self):
+        pass
+
 
 class main():
-    global sum_time, normal_loc, normal_scale, normal_sumlist, current_time, normal_patientnumber, normal_group  # 定义全局变量
+    # 主函数
+    global sum_time, normal_loc, normal_scale, normal_sumlist, current_time, normal_patientnumber, normal_group, normal_averagewaittime  # 定义全局变量
     global normal_queuenumber, normal_queue  # 定义全局顺序表、队列
 
     # 输入
@@ -119,6 +124,7 @@ class main():
     normal_patientnumber = 0
 
     while current_time < sum_time:
+        # 模拟时间，当当前时间未到总时间时，完成当前分钟的入队操作、出队操作
         normal.normal_get_patientNO(normal_queue, current_time)
         normal.normal_dequeue(normal_queue)
         current_time = current_time+1
