@@ -109,8 +109,7 @@ class alluse():
         sql = """UPDATE waittime SET exittime=%d WHERE exittime is NULL""" % (
             sum_time)
         cursor.execute(sql)
-        sql = """SELECT AVG(waittime.exittime - waittime.entertime) AS waittimelength FROM waittime WHERE waittime.patientinfo LIKE '%d%'""" % (
-            int(gettime.to_integer(dt_time)))
+        sql = """SELECT AVG(waittime.exittime - waittime.entertime) AS waittimelength FROM waittime WHERE DATE(currentdate) = CURRENT_DATE"""
         try:
             # 执行sql语句
             cursor.execute(sql)
@@ -426,8 +425,10 @@ class main():
     print("经过%d分钟，门诊病人完成诊疗人数为%d人" %
           (sum_time, int(normal_sumlist)-int(ArrayQueue.__len__(normal_queue))))
     print("门诊病人剩下人数为%d人" % (ArrayQueue.__len__(normal_queue)))
-
-    # 处理急诊数据
-
+    print()
+    print("经过%d分钟，急诊病人完成一般患者人数%d人，完成严重患者人数%d人，完成危重患者人数%d人" %
+          (sum_time, int(emergency_sumlist)-int(ArrayQueue.__len__(general_queue)), int(emergency_sumlist)-int(ArrayQueue.__len__(serious_queue)), int(emergency_sumlist)-int(ArrayQueue.__len__(critical_queue))))
+    print("急诊病人剩下一般患者人数%d人，剩下严重患者人数%d人，剩下危重患者人数%d人" % (ArrayQueue.__len__(
+        general_queue), ArrayQueue.__len__(serious_queue), ArrayQueue.__len__(critical_queue)))
     average_waittime = alluse.averagewaittime()
     print("所有病人的平均等待时间为%f分钟" % (average_waittime))
