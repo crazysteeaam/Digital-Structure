@@ -1,10 +1,19 @@
+from matplotlib.figure import Figure
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.backends.backend_tkagg import (
+    FigureCanvasTkAgg, NavigationToolbar2Tk)
 import math
 import numpy as np
 import pandas as pd
 import pymysql
-import matplotlib.pyplot
 import datetime
 from sqlalchemy.sql.sqltypes import DateTime
+import tkinter
+from tkinter import *
+import tkinter.messagebox
+import matplotlib.pyplot as plt
+plt.rcdefaults()
+# Implement the default Matplotlib key bindings.
 
 # 获取当前时间戳
 
@@ -12,6 +21,55 @@ from sqlalchemy.sql.sqltypes import DateTime
 class gettime():
     def to_integer(dt_time):
         return 10000*dt_time.year + 100*dt_time.month + dt_time.day
+
+# 用户界面设计
+
+
+class hospitalGUI:
+    # 标题
+    global root
+    root = Tk()
+    root.title('医院仿真系统')
+    root.geometry('500x500')
+    lbtitle = Label(root, text='医院仿真系统',
+                    fg='black',
+                    font=('等线', 20),
+                    width=20,
+                    height=2,
+                    relief=FLAT)
+    lbtitle.pack()
+
+    # 计算平均时间
+
+    def part_averagewaittime():
+        pass
+
+    def get_value(v=0):
+        # 滑块取值
+        param = {}
+        for key in scales.keys():
+            param[key] = scales[key]['value'].get()
+        paramVar.set(f"normal_lamda:{param['normal_lamda']}, normal_group:{param['normal_group']}, emergency_general_lamda:{param['emergency_general_lamda']}, emergency_serious_lamda:{param['emergency_serious_lamda']},emergency_critical_lamda:{param['emergency_critical_lamda']},emergency_group:{param['emergency_group']}")
+
+        # 折线图
+    def draw_chart(items):
+        f = Figure(figsize=(5, 4), dpi=100)
+        a = f.add_subplot(111)
+        y = [x[1] for x in items]
+        x = [x[0] for x in items]
+        a.plot(x, y)
+        # 将绘制的图形显示到tkinter:创建属于root的canvas画布,并将图f置于画布上
+        canvas = FigureCanvasTkAgg(f, master=root)
+        canvas.draw()
+        canvas.get_tk_widget().pack(side=tkinter.TOP,  # 上对齐
+                                    fill=tkinter.BOTH,  # 填充方式
+                                    expand=tkinter.YES)  # 随窗口大小调整而调整
+
+    def emptydatabase():
+        pass
+
+    def run(value):
+        sum_time = value
 
 # 队列ADT
 
@@ -112,6 +170,8 @@ class ArrayStack(object):
         for i in range(len(self._data)):
             print(self._data[i], end=' ')
         print()
+
+# 通用函数
 
 
 class alluse():
@@ -271,9 +331,14 @@ class alluse():
             db.rollback()  # 发生错误 回滚事务
         db.close()  # 最后关闭连接
 
+    def Decimal(item):
+        # 定义decimal数据类型
+        return float(item)
+
+     # 门诊函数库
+
 
 class normal():
-    # 门诊函数库
     def normal_number(normal_lamda, sum_time):
         # 生成每分钟门诊病人到达人数
         """
@@ -347,6 +412,8 @@ class normal():
             while ArrayQueue.__len__(self):
                 # 直接出队
                 ArrayQueue.dequeue(self)
+
+# 急诊函数库
 
 
 class emergency():
@@ -522,6 +589,50 @@ class main():
     global emergency_general_patientnumber, emergency_serious_patientnumber, emergency_critical_patientnumber
     global emergency_stack
     global emergency_general_sumpatient, emergency_serious_sumpatient, emergency_critical_sumpatient
+
+    plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文标签
+    # 滑块参数设定
+    root = Tk()
+    root.title("医院仿真系统")
+    root.geometry('500x500+400+400')    # 位置设置
+    root.wm_resizable(False, False)   # 不允许修改长宽
+    height = 500
+    width = 500
+    scales = {'normal_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 0, 'describe': "每分钟门诊病人平均到达人数"},
+              'normal_group': {'range': (0, 10), 'value': IntVar(), 'pos': 1, 'describe': "服务门诊病人的窗口总数"},
+              'emergency_general_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 2, 'describe': "每分钟急诊一般病人平均到达人数"},
+              'emergency_serious_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 3, 'describe': "每分钟急诊严重病人平均到达人数"},
+              'emergency_critical_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 4, 'describe': "每分钟急诊危重病人平均到达人数"},
+              'emergency_group': {'range': (0, 10), 'value': IntVar(), 'pos': 5, 'describe': "服务急诊病人的窗口总数"}}
+    for k, v in scales.items():
+        # Label(root, text=v['describe']).grid(row=v['pos'], column=0, padx=5)
+        scales[k]['target'] = Scale(root,
+                                    label=v['describe'],    # 标签
+                                    variable=v['value'], 	# 值
+                                    # 最小值， 记住是from_， from是关键字
+                                    from_=v['range'][0],
+                                    to=v['range'][1],  # 最大值
+                                    resolution=2,  # 步进值
+                                    show=1,   # 是否在上面显示值
+                                    orient=HORIZONTAL,  # 水平显示
+                                    length=450,  # 滑块长度
+                                    command=lambda value, key=k: hospitalGUI.get_value(value))
+        scales[k]['target'].grid(row=v['pos'], column=0, columnspan=3)
+    paramVar = StringVar()
+    # button
+    btn1 = Button(root, text='清空现有数据', command=hospitalGUI.emptydatabase)
+    btn1.place(relx=0.1, rely=0.4, relwidth=0.3, relheight=0.1)
+    btn1.grid()
+    btn2 = Button(root, text='确定', command=lambda: run(E1.get()))
+    btn2.place(relx=0.6, rely=0.4, relwidth=0.3, relheight=0.1)
+    btn2.grid()
+    # 输入框
+    L1 = Label(root, text="服务总时长")
+    L1.grid()
+    E1 = Entry(root, bd=5)
+    E1.grid()
+    # 清空数据库按钮
+    root.mainloop()
 
     # 输入
     while True:
