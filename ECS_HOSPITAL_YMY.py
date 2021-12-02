@@ -13,6 +13,8 @@ import tkinter
 from tkinter import *
 import tkinter.messagebox
 import matplotlib.pyplot as plt
+from decimal import Decimal
+
 plt.rcdefaults()
 # Implement the default Matplotlib key bindings.
 
@@ -28,10 +30,10 @@ class gettime():
 
 class hospitalGUI:
     # 标题
-    global root
+    global root, lbnormal_lamda1, lbnormal_lamda2, lbnormal_lamda3, lbnormal_lamda4, lbnormal_lamda5, lbnormal_lamda6, lbnormal_lamda7, lbnormal_lamda8
     root = Tk()
     root.title('医院仿真系统')
-    root.geometry('500x500')
+    root.geometry('600x600')
     lbtitle = Label(root, text='医院仿真系统',
                     fg='black',
                     font=('等线', 20),
@@ -39,6 +41,22 @@ class hospitalGUI:
                     height=2,
                     relief=FLAT)
     lbtitle.pack()
+    lbnormal_lamda1 = Label(root, text="")
+    lbnormal_lamda1.pack()
+    lbnormal_lamda2 = Label(root, text="")
+    lbnormal_lamda2.pack()
+    lbnormal_lamda3 = Label(root, text="")
+    lbnormal_lamda3.pack()
+    lbnormal_lamda4 = Label(root, text="")
+    lbnormal_lamda4.pack()
+    lbnormal_lamda5 = Label(root, text="")
+    lbnormal_lamda5.pack()
+    lbnormal_lamda6 = Label(root, text="")
+    lbnormal_lamda6.pack()
+    lbnormal_lamda7 = Label(root, text="")
+    lbnormal_lamda7.pack()
+    lbnormal_lamda8 = Label(root, text="")
+    lbnormal_lamda8.pack()
 
     # 计算平均时间
 
@@ -73,10 +91,11 @@ class hospitalGUI:
         global sum_time
         sum_time = value
 
+
 # 队列ADT
 
 
-class ArrayQueue:
+class ArrayQueue(object):
     DEFAULT_CAPACITY = 2
 
     def __init__(self):
@@ -178,6 +197,7 @@ class ArrayStack(object):
 
 class alluse():
     def averagewaittime():
+        global averagetime_results
         # 计算所有病人平均等待时间
         db = pymysql.connect(host="localhost", user="root",
                              password="Qqhh12345", database="ymyhospital", charset="utf8")  # 连接数据库
@@ -200,7 +220,7 @@ class alluse():
         return averagetime_results
 
     def part_averagewaittime():
-        global sum_time
+        global sum_time, part_percent_results
         # 将总时间平分为十段，输出每个阶段病人平均等待时间
         db = pymysql.connect(host="localhost", user="root",
                              password="Qqhh12345", database="ymyhospital", charset="utf8")  # 连接数据库
@@ -231,7 +251,14 @@ class alluse():
                 part_percent_results_temp[part_percent_i])
         db.close()  # 最后关闭连接
         print(part_percent_results)
+        hospitalGUI.draw_chart(part_percent_results)
         return part_percent_results
+
+    def part_averagewaittime_drawchart():
+        global part_percent_results
+        alluse.part_averagewaittime()
+        print(part_percent_results)
+        hospitalGUI.draw_chart(part_percent_results)
 
     def customize_averagewaittime():
         # 用户自定义输入初始时间和最终时间，输出该阶段内到达病人平均等待时间
@@ -282,7 +309,7 @@ class alluse():
             db.rollback()  # 发生错误 回滚事务
         emergency_averagewaittime_results = cursor.fetchone()
         print("急诊患者平均等待时间为%d" % (emergency_averagewaittime_results))
-        sql = """SELECT AVG(waittime.exittime - waittime.entertime) as av from waittime WHERE substr(patientinfo,9,2)='20'or'21'or'22'"""
+        sql = """SELECT AVG(waittime.exittime - waittime.entertime) as av from waittime WHERE substr(patientinfo,9,2) in('20','21','22')"""
         try:
             # 执行sql语句
             cursor.execute(sql)
@@ -293,7 +320,7 @@ class alluse():
             db.rollback()  # 发生错误 回滚事务
         emergency_general_averagewaittime_results = cursor.fetchone()
         print("急诊一般患者平均等待时间为%d" % (emergency_general_averagewaittime_results))
-        sql = """SELECT AVG(waittime.exittime - waittime.entertime) as av from waittime WHERE substr(patientinfo,9,2)='23'or'24'or'25'"""
+        sql = """SELECT AVG(waittime.exittime - waittime.entertime) as av from waittime WHERE substr(patientinfo,9,2) in('23','24','25')"""
         try:
             # 执行sql语句
             cursor.execute(sql)
@@ -304,7 +331,7 @@ class alluse():
             db.rollback()  # 发生错误 回滚事务
         emergency_serious_averagewaittime_results = cursor.fetchone()
         print("急诊严重患者平均等待时间为%d" % (emergency_serious_averagewaittime_results))
-        sql = """SELECT AVG(waittime.exittime - waittime.entertime) as av from waittime WHERE substr(patientinfo,9,2)='26'or'27'or'28'or'29'"""
+        sql = """SELECT AVG(waittime.exittime - waittime.entertime) as av from waittime WHERE substr(patientinfo,9,2) in('26','27','28',"29")"""
         try:
             # 执行sql语句
             cursor.execute(sql)
@@ -332,10 +359,6 @@ class alluse():
             print("添加失败", e)
             db.rollback()  # 发生错误 回滚事务
         db.close()  # 最后关闭连接
-
-    def Decimal(item):
-        # 定义decimal数据类型
-        return float(item)
 
      # 门诊函数库
 
@@ -586,13 +609,16 @@ class mainexe():
         global general_queue, serious_queue, critical_queue
         global lbnormal_lamda1, lbnormal_lamda2, lbnormal_lamda3, lbnormal_lamda4, lbnormal_lamda5, lbnormal_lamda6, lbnormal_lamda7, lbnormal_lamda8
         global emergency_general_lamda, emergency_serious_lamda, emergency_critical_lamda
+        global normal_lamda_scale, emergency_general_lamda_scale, emergency_serious_lamda_scale, emergency_critical_lamda_scale, normal_group_scale, emergency_group_scale
+        global lbnormal_lamda, lbemergency_general_lamda, lbemergency_serious_lamda, lbemergency_critical_lamda, lbnormal_group, lbemergency_group
 
-        sum_time = hospitalGUI.run(E1.get())
-        normal_lamda = 2
-        emergency_general_lamda = 1
-        emergency_serious_lamda = 1
-        emergency_critical_lamda = 1
-        normal_group = 2
+        hospitalGUI.run(E1.get())
+        sum_time = int(sum_time)
+        normal_lamda = normal_lamda_scale.get()
+        emergency_general_lamda = emergency_general_lamda_scale.get()
+        emergency_serious_lamda = emergency_serious_lamda_scale.get()
+        emergency_critical_lamda = emergency_critical_lamda_scale.get()
+        normal_group = normal_group_scale.get()
         emergency_group = 2
         print(sum_time)
         normal_queuenumber = list()
@@ -668,58 +694,54 @@ class main():
     global general_queue, serious_queue, critical_queue
     global lbnormal_lamda1, lbnormal_lamda2, lbnormal_lamda3, lbnormal_lamda4, lbnormal_lamda5, lbnormal_lamda6, lbnormal_lamda7, lbnormal_lamda8
     global emergency_general_lamda, emergency_serious_lamda, emergency_critical_lamda
+    global normal_lamda_scale, emergency_general_lamda_scale, emergency_serious_lamda_scale, emergency_critical_lamda_scale, normal_group_scale, emergency_group_scale
+    global lbnormal_lamda, lbemergency_general_lamda, lbemergency_serious_lamda, lbemergency_critical_lamda, lbnormal_group, lbemergency_group
 
     plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文标签
     # 窗口参数设定
     root = Tk()
     root.title("医院仿真系统")
-    root.geometry('500x500+400+400')    # 位置设置
+    root.geometry('450x600+400+400')    # 位置设置
     root.wm_resizable(False, False)   # 不允许修改长宽
     height = 500
     width = 500
     # 滑块参数设定
-    scales = {'normal_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 0, 'describe': "每分钟门诊病人平均到达人数"},
-              'normal_group': {'range': (0, 10), 'value': IntVar(), 'pos': 1, 'describe': "服务门诊病人的窗口总数"},
-              'emergency_general_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 2, 'describe': "每分钟急诊一般病人平均到达人数"},
-              'emergency_serious_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 3, 'describe': "每分钟急诊严重病人平均到达人数"},
-              'emergency_critical_lamda': {'range': (0, 30), 'value': IntVar(), 'pos': 4, 'describe': "每分钟急诊危重病人平均到达人数"},
-              'emergency_group': {'range': (0, 10), 'value': IntVar(), 'pos': 5, 'describe': "服务急诊病人的窗口总数"}}
-    for k, v in scales.items():
-        # Label(root, text=v['describe']).grid(row=v['pos'], column=0, padx=5)
-        scales[k]['target'] = Scale(root,
-                                    label=v['describe'],    # 标签
-                                    variable=v['value'], 	# 值
-                                    # 最小值， 记住是from_， from是关键字
-                                    from_=v['range'][0],
-                                    to=v['range'][1],  # 最大值
-                                    resolution=2,  # 步进值
-                                    show=1,   # 是否在上面显示值
-                                    orient=HORIZONTAL,  # 水平显示
-                                    length=450,  # 滑块长度
-                                    command=lambda value, key=k: hospitalGUI.get_value())
-        scales[k]['target'].grid(row=v['pos'], column=0, columnspan=3)
-    paramVar = StringVar()
+    normal_lamda_scale = Scale(
+        root, length=200, label='每分钟门诊患者平均人数', from_=0, to=10, orient=HORIZONTAL)  # Scale组件
+    normal_lamda_scale.grid(column=3, row=0)
+    emergency_general_lamda_scale = Scale(
+        root, length=200, label='每分钟急诊一般患者平均人数', from_=0, to=10, orient=HORIZONTAL)
+    emergency_general_lamda_scale.grid(column=3, row=1)
+    emergency_serious_lamda_scale = Scale(
+        root, length=200, label='每分钟急诊严重患者平均人数', from_=0, to=10, orient=HORIZONTAL)
+    emergency_serious_lamda_scale.grid(column=3, row=2)
+    emergency_critical_lamda_scale = Scale(
+        root, length=200, label='每分钟急诊危重患者平均人数', from_=0, to=10, orient=HORIZONTAL)
+    emergency_critical_lamda_scale.grid(column=3, row=3)
+    normal_group_scale = Scale(
+        root, length=200, label='门诊窗口数', from_=0, to=10, orient=HORIZONTAL)
+    normal_group_scale.grid(column=3, row=4)
+    emergency_group_scale = Scale(
+        root, length=200, label='急诊窗口数', from_=0, to=10, orient=HORIZONTAL)
+    emergency_group_scale.grid(column=3, row=5)
     # 定义button
-    btn1 = Button(root, text='清空现有数据', command=hospitalGUI.emptydatabase())
+    btn1 = Button(root, text='清空现有数据', command=alluse.emptydatabase())
     btn1.place(relx=0.1, rely=0.4, relwidth=0.3, relheight=0.1)
-    btn1.grid()
+    btn1.grid(column=3, row=10)
     btn2 = Button(root, text='确定', command=lambda: mainexe.main_button_click())
     btn2.place(relx=0.6, rely=0.4, relwidth=0.3, relheight=0.1)
-    btn2.grid()
+    btn2.grid(column=3, row=11)
+    btn3 = Button(root, text='将总时长平分为五段，输出每个阶段病人平均等待时间',
+                  command=lambda: alluse.part_averagewaittime_drawchart())
+    btn3.place(relx=0.6, rely=0.4, relwidth=0.7, relheight=0.1)
+    btn3.grid(column=3, row=12)
+
     # 输入框
     L1 = Label(root, text="服务总时长")
-    L1.grid()
+    L1.grid(column=3, row=8)
     E1 = Entry(root, bd=5)
-    E1.grid()
+    E1.grid(padx=20, column=3, row=9)
     # 反馈输出
-    lbnormal_lamda1 = Label(root, text="")
-    lbnormal_lamda2 = Label(root, text="")
-    lbnormal_lamda3 = Label(root, text="")
-    lbnormal_lamda4 = Label(root, text="")
-    lbnormal_lamda5 = Label(root, text="")
-    lbnormal_lamda6 = Label(root, text="")
-    lbnormal_lamda7 = Label(root, text="")
-    lbnormal_lamda8 = Label(root, text="")
 
     # 清空数据库按钮
     root.mainloop()
